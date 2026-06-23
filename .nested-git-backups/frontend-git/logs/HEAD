@@ -1,0 +1,7 @@
+0000000000000000000000000000000000000000 ca5e65d25e145c9f03a90ee710298d02b11e5735 amine bensaadat <bensaadat.amine@gmail.com> 1782117470 +0100	commit (initial): Initial commit
+ca5e65d25e145c9f03a90ee710298d02b11e5735 0000000000000000000000000000000000000000 amine bensaadat <bensaadat.amine@gmail.com> 1782117484 +0100	Branch: renamed refs/heads/master to refs/heads/main
+0000000000000000000000000000000000000000 ca5e65d25e145c9f03a90ee710298d02b11e5735 amine bensaadat <bensaadat.amine@gmail.com> 1782117484 +0100	Branch: renamed refs/heads/master to refs/heads/main
+ca5e65d25e145c9f03a90ee710298d02b11e5735 9bf2587a5437f0910d2f730192a5ad895e40903c amine bensaadat <bensaadat.amine@gmail.com> 1782122330 +0100	commit: Add product carousel with auto-swipe and shop button
+9bf2587a5437f0910d2f730192a5ad895e40903c 70701637f69947309c0ab1b726beadef0f55e884 amine bensaadat <bensaadat.amine@gmail.com> 1782135931 +0100	commit: update front end add admin dashboard
+70701637f69947309c0ab1b726beadef0f55e884 ff9ffd450ac6f3e1b03a005643100ed59a49b16e amine bensaadat <bensaadat.amine@gmail.com> 1782136951 +0100	commit: Add responsive admin panel with sidebar, login form, and mobile-optimized layouts
+ff9ffd450ac6f3e1b03a005643100ed59a49b16e ab83f60afdb71b0228898558c71824e3ee3b19c4 amine bensaadat <bensaadat.amine@gmail.com> 1782212334 +0100	commit: fix: admin auth and category create API integration

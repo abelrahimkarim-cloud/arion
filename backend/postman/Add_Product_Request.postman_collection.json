@@ -1,0 +1,36 @@
+{
+  "info": {
+    "name": "Add Product - Single Request",
+    "_postman_id": "b3a9f2f2-9d4a-4a1b-92d3-3a2f6e2c5f1a",
+    "description": "Single Postman request to add a product (admin).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Add Product (admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"category_id\":1,\"name\":\"Example Tee\",\"slug\":\"example-tee\",\"description\":\"A short description of the product.\",\"price\":29.99,\"is_featured\":false,\"is_new\":true,\"is_best_seller\":false,\"show_on_homepage\":false,\"images\":[{\"path\":\"/images/example1.jpg\",\"alt_text\":\"Front view\"}],\"variants\":[{\"sku\":\"EX-TEE-001\",\"size\":\"M\",\"color\":\"Black\",\"stock\":10,\"price\":29.99}]}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/admin/products",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "products"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

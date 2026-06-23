@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Foundation\Application;
+
+$app = new Application(
+    dirname(__DIR__)
+);
+
+$app->singleton(
+    Illuminate\Contracts\Debug\ExceptionHandler::class,
+    App\Exceptions\Handler::class
+);
+
+$app->singleton(
+    Illuminate\Contracts\Console\Kernel::class,
+    App\Console\Kernel::class
+);
+
+$app->singleton(
+    Illuminate\Contracts\Http\Kernel::class,
+    App\Http\Kernel::class
+);
+
+// Register cookie provider early so the 'cookie' binding exists for sessions
+$app->register(Illuminate\Cookie\CookieServiceProvider::class);
+
+return $app;

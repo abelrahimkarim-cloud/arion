@@ -1,0 +1,6 @@
+fix: admin auth and category create API integration
+
+- improve adminFetch token handling with sanitization and Accept headers
+- add 401 recovery redirect to login in categories page
+- ensure category create sends slug and matches backend validation
+- handle both raw array and data-wrapped responses from API

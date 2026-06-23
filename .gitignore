@@ -1,6 +1,7 @@
 # Ignore nested Git repository data
 /backend/.git
 /frontend/.git
+/.nested-git-backups/
 
 # Laravel backend
 /backend/vendor/
