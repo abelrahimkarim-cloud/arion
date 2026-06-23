@@ -1,0 +1,27 @@
+# Ignore nested Git repository data
+/backend/.git
+/frontend/.git
+
+# Laravel backend
+/backend/vendor/
+/backend/node_modules/
+/backend/.env
+/backend/.env.*
+/backend/public/storage/
+/backend/storage/
+/backend/phpunit.xml
+/backend/.phpunit.result.cache
+/backend/.idea/
+/backend/.vscode/
+
+# Next.js frontend
+/frontend/.next/
+/frontend/node_modules/
+/frontend/.env
+/frontend/.env.*
+/frontend/.DS_Store
+/frontend/.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
