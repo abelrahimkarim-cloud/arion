@@ -25,6 +25,7 @@ Route::middleware(['auth:api'])->prefix('admin')->group(function () {
     Route::get('orders', [OrderController::class, 'adminIndex']);
     Route::patch('orders/{order}', [OrderController::class, 'updateStatus']);
     Route::get('products', [ProductController::class, 'adminIndex']);
+    Route::get('products/{product}', [ProductController::class, 'adminShow']);
     Route::post('products', [ProductController::class, 'store']);
     Route::put('products/{product}', [ProductController::class, 'update']);
     Route::delete('products/{product}', [ProductController::class, 'destroy']);

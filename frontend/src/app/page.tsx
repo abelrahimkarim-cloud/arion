@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 export default function HomePage() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [imageErrors, setImageErrors] = useState({});
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const defaultImage =
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23e5e7eb" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%239ca3af"%3EImage Not Found%3C/text%3E%3C/svg%3E';
@@ -21,12 +21,13 @@ export default function HomePage() {
         const BACKEND_URL = 'http://127.0.0.1:8000';
 
         // Transform API response to match frontend expectations
-        const transformedProducts = productsData.map((product) => ({
+        const transformedProducts = productsData.map((product: any) => ({
           ...product,
           image: product.images?.[0]?.path
             ? `${BACKEND_URL}/storage/${product.images[0].path.replace(/^\/+/, '')}`
             : defaultImage,
-          price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+          price:
+            typeof product.price === 'string' ? Number.parseFloat(product.price) : product.price,
         }));
 
         setProducts(transformedProducts);
@@ -40,7 +41,7 @@ export default function HomePage() {
     fetchProducts();
   }, []);
 
-  const featured = products.filter((product) => product.show_on_homepage);
+  const featured = products.filter((product: any) => product.show_on_homepage);
 
   useEffect(() => {
     if (featured.length <= 1) return;

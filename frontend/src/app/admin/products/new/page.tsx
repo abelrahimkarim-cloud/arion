@@ -106,7 +106,10 @@ export default function AdminAddProductPage() {
   const addVariant = () => {
     setForm((prev) => ({
       ...prev,
-      variants: [...prev.variants, { sku: '', size: '', color: '', stock: '', price: '' }],
+      variants: [
+        ...prev.variants,
+        { sku: '', size: '', color: '', stock: '', price: '', image: '' },
+      ],
     }));
   };
 
@@ -125,15 +128,15 @@ export default function AdminAddProductPage() {
     try {
       const payload = {
         ...form,
-        category_id: parseInt(form.category_id),
-        price: parseFloat(form.price),
+        category_id: Number.parseInt(form.category_id, 10),
+        price: Number.parseFloat(form.price),
         images: form.images.filter((img) => img.path),
         variants: form.variants
           .filter((v) => v.sku)
           .map((v) => ({
             ...v,
-            stock: parseInt(v.stock),
-            price: parseFloat(v.price),
+            stock: Number.parseInt(v.stock, 10),
+            price: Number.parseFloat(v.price),
           })),
       };
 

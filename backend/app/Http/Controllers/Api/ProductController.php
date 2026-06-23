@@ -8,6 +8,7 @@ use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class ProductController extends Controller
 {
@@ -60,6 +61,11 @@ class ProductController extends Controller
         return response()->json(Product::with(['category', 'variants'])->orderBy('created_at', 'desc')->get());
     }
 
+    public function adminShow(Product $product)
+    {
+        return response()->json($product->load(['images', 'variants', 'category']));
+    }
+
     public function store(Request $request)
     {
         Log::info('ProductController store called', ['url' => $request->url()]);
@@ -83,6 +89,7 @@ class ProductController extends Controller
             'variants.*.color' => 'required|string',
             'variants.*.stock' => 'required|integer|min:0',
             'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.image' => 'nullable|string',
         ]);
 
         $product = Product::create($data);
@@ -95,6 +102,10 @@ class ProductController extends Controller
 
         if (! empty($data['variants'])) {
             foreach ($data['variants'] as $variant) {
+                // If the DB doesn't yet have an `image` column, remove it to avoid SQL errors.
+                if (! Schema::hasColumn('product_variants', 'image')) {
+                    unset($variant['image']);
+                }
                 ProductVariant::create(array_merge($variant, ['product_id' => $product->id]));
             }
         }
@@ -123,6 +134,7 @@ class ProductController extends Controller
             'variants.*.color' => 'required|string',
             'variants.*.stock' => 'required|integer|min:0',
             'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.image' => 'nullable|string',
         ]);
 
         $product->update($data);
@@ -137,6 +149,9 @@ class ProductController extends Controller
         if (isset($data['variants'])) {
             $product->variants()->delete();
             foreach ($data['variants'] as $variant) {
+                if (! Schema::hasColumn('product_variants', 'image')) {
+                    unset($variant['image']);
+                }
                 ProductVariant::create(array_merge($variant, ['product_id' => $product->id]));
             }
         }

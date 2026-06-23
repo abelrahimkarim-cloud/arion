@@ -16,7 +16,8 @@ export default function AdminProductsPage() {
       try {
         const response = await adminFetch('/api/admin/products');
         const result = await response.json();
-        setProducts(result.data || []);
+        const productsData = Array.isArray(result) ? result : result.data || [];
+        setProducts(productsData);
       } catch (error) {
         console.error(error);
       } finally {
@@ -33,13 +34,22 @@ export default function AdminProductsPage() {
     `$${product.price}`,
     product.category?.name || 'Uncategorized',
     product.show_on_homepage ? 'Yes' : 'No',
-    <Link
-      key={`${product.id}-edit`}
-      href={`/admin/products/${product.id}`}
-      className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
-    >
-      Edit
-    </Link>,
+    <div className="flex flex-wrap gap-2" key="actions">
+      <Link
+        key={`${product.id}-edit`}
+        href={`/admin/products/${product.id}`}
+        className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+      >
+        Edit
+      </Link>
+      <Link
+        key={`${product.id}-view`}
+        href={`/product/${product.slug}`}
+        className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-900 transition hover:border-slate-900 hover:text-slate-900"
+      >
+        View
+      </Link>
+    </div>,
   ]);
 
   return (
@@ -68,9 +78,10 @@ export default function AdminProductsPage() {
         />
       )}
       <div className="rounded-3xl border border-slate-200 bg-white px-8 py-8 shadow-sm">
-        <p className="text-sm text-slate-600">Note: Add product creation and image upload are not yet implemented in this admin panel.</p>
+        <p className="text-sm text-slate-600">
+          Note: Add product creation and image upload are not yet implemented in this admin panel.
+        </p>
       </div>
-      )}
     </div>
   );
 }

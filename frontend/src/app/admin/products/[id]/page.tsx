@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminFetch, adminLogout } from '@/lib/adminAuth';
+import { adminFetch } from '@/lib/adminAuth';
 import { useAdminAuthGuard } from '@/lib/useAdminAuthGuard';
 import ImageUploadField from '@/components/admin/ImageUploadField';
 
-export default function AdminProductDetailPage({ params }: { params: { id: string } }) {
+export default function AdminProductDetailPage({ params }: any) {
   useAdminAuthGuard();
   const router = useRouter();
   const [categories, setCategories] = useState<any[]>([]);
@@ -37,25 +37,58 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
           adminFetch('/api/admin/categories'),
           adminFetch(`/api/admin/products/${params.id}`),
         ]);
+        // handle auth
+        if (prodRes.status === 401) {
+          router.replace('/admin/login');
+          return;
+        }
 
-        const catData = await catRes.json();
-        const prodData = await prodRes.json();
+        const catData = await (catRes.ok ? catRes.json() : Promise.resolve([]));
+        const prodData = await prodRes.json().catch(() => null);
 
-        setCategories(catData.data || []);
+        console.debug('admin: product response', { prodResStatus: prodRes.status, prodData });
+
+        // normalize categories
+        const categoriesArray = Array.isArray(catData) ? catData : catData?.data || [];
+        setCategories(categoriesArray);
+
+        if (!prodData) {
+          setMessage('Unable to load product data');
+          setProduct(null);
+          return;
+        }
+
         const prod = prodData.data || prodData;
         setProduct(prod);
+
+        // normalize images and variants to ensure form fields are populated
+        const images = Array.isArray(prod.images)
+          ? prod.images.map((img: any) => ({ path: img.path || '', alt_text: img.alt_text || '' }))
+          : [];
+
+        const variants = Array.isArray(prod.variants)
+          ? prod.variants.map((v: any) => ({
+              sku: v.sku || '',
+              size: v.size || '',
+              color: v.color || '',
+              stock: String(v.stock ?? ''),
+              price: String(v.price ?? ''),
+              image: v.image ?? v.path ?? '',
+            }))
+          : [];
+
         setForm({
           name: prod.name || '',
           slug: prod.slug || '',
-          category_id: prod.category_id || '',
+          category_id: String(prod.category_id ?? ''),
           description: prod.description || '',
           price: String(prod.price ?? ''),
           is_featured: prod.is_featured ?? false,
           is_new: prod.is_new ?? false,
           is_best_seller: prod.is_best_seller ?? false,
           show_on_homepage: prod.show_on_homepage ?? false,
-          images: prod.images || [],
-          variants: prod.variants || [],
+          images,
+          variants,
         });
       } catch (error) {
         console.error(error);
@@ -103,7 +136,10 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
   const addVariant = () => {
     setForm((prev) => ({
       ...prev,
-      variants: [...prev.variants, { sku: '', size: '', color: '', stock: '', price: '' }],
+      variants: [
+        ...prev.variants,
+        { sku: '', size: '', color: '', stock: '', price: '', image: '' },
+      ],
     }));
   };
 
@@ -114,7 +150,7 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
     }));
   };
 
-  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
     setMessage('');
@@ -122,14 +158,16 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
     try {
       const payload = {
         ...form,
-        category_id: parseInt(form.category_id),
-        price: parseFloat(form.price),
+        category_id: Number.parseInt(form.category_id, 10),
+        price: Number.parseFloat(form.price),
         images: form.images.filter((img) => img.path),
-        variants: form.variants.filter((v) => v.sku).map((v) => ({
-          ...v,
-          stock: parseInt(v.stock),
-          price: parseFloat(v.price),
-        })),
+        variants: form.variants
+          .filter((v) => v.sku)
+          .map((v) => ({
+            ...v,
+            stock: v.stock !== '' ? Number.parseInt(v.stock, 10) : 0,
+            price: v.price !== '' ? Number.parseFloat(v.price) : Number.parseFloat(form.price),
+          })),
       };
 
       const response = await adminFetch(`/api/admin/products/${params.id}`, {
@@ -163,10 +201,15 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
     <div className="space-y-8">
       <div className="rounded-3xl border border-slate-200 bg-white px-8 py-8 shadow-sm">
         <h1 className="text-3xl font-semibold text-slate-900">Edit product</h1>
-        <p className="mt-2 text-sm text-slate-600">Update product details, images, variants, and visibility settings.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          Update product details, images, variants, and visibility settings.
+        </p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8 rounded-3xl border border-slate-200 bg-white px-8 py-8 shadow-sm">
+      <form
+        onSubmit={handleSave}
+        className="space-y-8 rounded-3xl border border-slate-200 bg-white px-8 py-8 shadow-sm"
+      >
         <div className="space-y-4 border-b border-slate-200 pb-6">
           <h2 className="text-lg font-semibold text-slate-900">Basic information</h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -225,12 +268,11 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
               type="number"
               step="0.01"
               value={form.price}
-                onChange={(e) => handleInputChange('price', e.target.value)}
-                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
-                required
-              />
-            </label>
-          </div>
+              onChange={(e) => handleInputChange('price', e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
+              required
+            />
+          </label>
         </div>
 
         <div className="space-y-4 border-b border-slate-200 pb-6">
@@ -309,7 +351,9 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
                 />
 
                 <label className="mt-4 block">
-                  <span className="text-xs font-semibold text-slate-600">Alt text (for accessibility)</span>
+                  <span className="text-xs font-semibold text-slate-600">
+                    Alt text (for accessibility)
+                  </span>
                   <input
                     type="text"
                     value={image.alt_text}
@@ -340,7 +384,8 @@ export default function AdminProductDetailPage({ params }: { params: { id: strin
               <div key={index} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-semibold text-slate-700">
-                    Variant {index + 1}: {variant.size && variant.color ? `${variant.size} - ${variant.color}` : 'New'}
+                    Variant {index + 1}:{' '}
+                    {variant.size && variant.color ? `${variant.size} - ${variant.color}` : 'New'}
                   </span>
                   <button
                     type="button"
