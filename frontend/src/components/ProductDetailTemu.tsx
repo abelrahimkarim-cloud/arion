@@ -131,6 +131,25 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
                 ))}
               </div>
             )}
+
+            {/* Static customer photos / reviews (placeholder images) */}
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold text-slate-900 mb-2">Customer photos</h3>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-white"
+                  >
+                    <img
+                      src={`https://via.placeholder.com/160?text=Photo+${i}`}
+                      alt={`Customer photo ${i}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Right: Order panel */}
