@@ -72,7 +72,11 @@ export default function AdminProductDetailPage({ params }: any) {
 
         // normalize images and variants to ensure form fields are populated
         const images = Array.isArray(prod.images)
-          ? prod.images.map((img: any) => ({ path: img.path || '', alt_text: img.alt_text || '' }))
+          ? prod.images.map((img: any) => ({
+              path: img.path || '',
+              alt_text: img.alt_text || '',
+              is_default: Boolean(img.is_default || img.isDefault || false),
+            }))
           : [];
 
         const variants = Array.isArray(prod.variants)
@@ -144,6 +148,13 @@ export default function AdminProductDetailPage({ params }: any) {
     const newImages = [...form.images];
     newImages[index] = { ...newImages[index], [field]: value };
     setForm((prev) => ({ ...prev, images: newImages }));
+  };
+
+  const setDefaultImage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.map((img, i) => ({ ...img, is_default: i === index })),
+    }));
   };
 
   const addImage = () => {
@@ -458,6 +469,23 @@ export default function AdminProductDetailPage({ params }: any) {
                             label="Product image"
                             showPreview={true}
                           />
+                          <div className="mt-3 flex items-center justify-between">
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="radio"
+                                name={`default-image-${product?.id || 'new'}`}
+                                checked={Boolean(image.is_default)}
+                                onChange={() => setDefaultImage(index)}
+                                className="h-4 w-4"
+                              />
+                              <span className="text-xs text-slate-600">Set as default</span>
+                            </label>
+                            {image.is_default && (
+                              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                                Default
+                              </span>
+                            )}
+                          </div>
                           <label className="mt-4 block">
                             <span className="text-xs font-semibold text-slate-600">Alt text</span>
                             <input

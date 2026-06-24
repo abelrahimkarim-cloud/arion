@@ -113,6 +113,13 @@ export default function AdminAddProductPage() {
     setForm((prev) => ({ ...prev, images: newImages }));
   };
 
+  const setDefaultImage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.map((img, i) => ({ ...img, is_default: i === index })),
+    }));
+  };
+
   const addImage = () => {
     setForm((prev) => ({
       ...prev,
@@ -433,10 +440,10 @@ export default function AdminAddProductPage() {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {form.images.map((image, index) => (
-                      <div
-                        key={index}
-                        className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
-                      >
+                        <div
+                          key={index}
+                          className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
+                        >
                         <div className="mb-4 flex items-center justify-between">
                           <span className="text-sm font-semibold text-slate-700">
                             Image {index + 1}
@@ -456,6 +463,21 @@ export default function AdminAddProductPage() {
                           label="Product image"
                           showPreview={true}
                         />
+                        <div className="mt-3 flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name="default-image"
+                              checked={Boolean(image.is_default)}
+                              onChange={() => setDefaultImage(index)}
+                              className="h-4 w-4"
+                            />
+                            <span className="text-xs text-slate-600">Set as default</span>
+                          </label>
+                          {image.is_default && (
+                            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">Default</span>
+                          )}
+                        </div>
                         <label className="mt-4 block">
                           <span className="text-xs font-semibold text-slate-600">Alt text</span>
                           <input
