@@ -14,6 +14,11 @@ class ProductImage extends Model
         'path',
         'alt_text',
         'sort_order',
+        'is_default',
+    ];
+
+    protected $casts = [
+        'is_default' => 'boolean',
     ];
 
     public function product()

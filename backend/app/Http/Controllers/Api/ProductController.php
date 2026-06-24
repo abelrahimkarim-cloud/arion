@@ -95,8 +95,15 @@ class ProductController extends Controller
         $product = Product::create($data);
 
         if (! empty($data['images'])) {
+            // Ensure exactly one default image: if none provided, mark first as default
+            $hasDefault = collect($data['images'])->contains(fn($img) => ! empty($img['is_default']));
             foreach ($data['images'] as $index => $image) {
-                ProductImage::create(array_merge($image, ['product_id' => $product->id, 'sort_order' => $index]));
+                $img = $image;
+                if (! $hasDefault && $index === 0) {
+                    $img['is_default'] = true;
+                    $hasDefault = true;
+                }
+                ProductImage::create(array_merge($img, ['product_id' => $product->id, 'sort_order' => $index]));
             }
         }
 
@@ -140,9 +147,16 @@ class ProductController extends Controller
         $product->update($data);
 
         if (isset($data['images'])) {
+            // Replace images and ensure a single default image
             $product->images()->delete();
+            $hasDefault = collect($data['images'])->contains(fn($img) => ! empty($img['is_default']));
             foreach ($data['images'] as $index => $image) {
-                ProductImage::create(array_merge($image, ['product_id' => $product->id, 'sort_order' => $index]));
+                $img = $image;
+                if (! $hasDefault && $index === 0) {
+                    $img['is_default'] = true;
+                    $hasDefault = true;
+                }
+                ProductImage::create(array_merge($img, ['product_id' => $product->id, 'sort_order' => $index]));
             }
         }
 
