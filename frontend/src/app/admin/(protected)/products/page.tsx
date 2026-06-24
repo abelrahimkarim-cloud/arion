@@ -39,23 +39,26 @@ export default function AdminProductsPage() {
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23e5e7eb" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%239ca3af"%3EImage Not Found%3C/text%3E%3C/svg%3E';
 
   const rows = products.map((product) => {
-      // Prefer `default_image` returned by the API if present, otherwise fall back to images[]
-      const defaultImg = Array.isArray(product.images)
-        ? product.images.find((i: any) => i.is_default) || product.images[0]
-        : null;
-      const imageUrl = product.default_image
-        ? product.default_image
-        : defaultImg && defaultImg.path
-        ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
-        : defaultImage;
+    // Prefer `default_image` returned by the API if present, otherwise fall back to images[]
+    const defaultImg = Array.isArray(product.images)
+      ? product.images.find((i: any) => i.is_default) || product.images[0]
+      : null;
+    const imageUrl = product.default_image
+      ? product.default_image
+      : defaultImg && defaultImg.path
+      ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
+      : null;
+
+    const imageCell = imageUrl ? (
+      <img key={`img-${product.id}`} src={imageUrl} alt={product.name} className="h-12 w-12 rounded object-cover" />
+    ) : (
+      <div key={`img-${product.id}`} className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-500">
+        No image
+      </div>
+    );
 
     return [
-      <img
-        key={`img-${product.id}`}
-        src={imageUrl}
-        alt={product.name}
-        className="h-12 w-12 rounded object-cover"
-      />,
+      imageCell,
       product.id,
       product.name,
       `$${product.price}`,
