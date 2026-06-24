@@ -100,6 +100,43 @@ export default function ProductPage({ params }: any) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
 
+  const normalizeImageUrl = (path: string, base: string) => {
+    if (!path) return null;
+    if (/^https?:\/\//.test(path)) return path;
+    if (path.startsWith('/storage/')) return `${base}${path}`;
+    return `${base}/storage/${path.replace(/^\/+/, '')}`;
+  };
+
+  const getVariantImages = (variant: any, base: string, fallbackImages: string[]) => {
+    if (!variant?.image) return fallbackImages;
+
+    const source = variant.image;
+    let images: string[] = [];
+
+    if (typeof source === 'string') {
+      try {
+        const parsed = JSON.parse(source);
+        if (Array.isArray(parsed)) {
+          images = parsed.map((img) => String(img)).filter(Boolean);
+        } else {
+          images = [source];
+        }
+      } catch {
+        images = [source];
+      }
+    }
+
+    if (!images.length) {
+      return fallbackImages;
+    }
+
+    const resolved = images
+      .map((image) => normalizeImageUrl(image, base))
+      .filter((url): url is string => Boolean(url));
+
+    return resolved.length ? Array.from(new Set([...resolved, ...fallbackImages])) : fallbackImages;
+  };
+
   useEffect(() => {
     // If a slug is provided, fetch product from backend API.
     // Fallback to `sampleProduct` when no slug or fetch fails.
@@ -130,11 +167,9 @@ export default function ProductPage({ params }: any) {
             const base = backend.replace(/\/$/, '');
             // Normalize backend response to our frontend `Product` shape
             const imageUrls: string[] = Array.isArray(data.images)
-              ? data.images.map((img: any) =>
-                  img.path && /^https?:\/\//.test(img.path)
-                    ? img.path
-                    : `${base}/storage/${img.path}`
-                )
+              ? data.images
+                  .map((img: any) => normalizeImageUrl(String(img.path || ''), base))
+                  .filter((url): url is string => Boolean(url))
               : [];
 
             const variants = Array.isArray(data.variants) ? data.variants : [];
@@ -145,6 +180,7 @@ export default function ProductPage({ params }: any) {
               const colorKey = (v.color || 'default').toString();
               const sizeLabel = v.size ? v.size.toString().toUpperCase() : 'ONE';
               const priceNum = v.price ? Number(v.price) : Number(data.price || 0);
+              const variantImages = getVariantImages(v, base, imageUrls);
               if (!variationMap[colorKey]) {
                 variationMap[colorKey] = {
                   label: colorKey,
@@ -152,7 +188,7 @@ export default function ProductPage({ params }: any) {
                   price: priceNum,
                   salePrice: undefined,
                   stock: Number(v.stock || 0),
-                  images: imageUrls.length ? imageUrls : [],
+                  images: variantImages,
                   sizes: [
                     {
                       label: sizeLabel,
@@ -162,7 +198,6 @@ export default function ProductPage({ params }: any) {
                   ],
                 };
               } else {
-                // append size and accumulate stock
                 const existing = variationMap[colorKey];
                 existing.sizes.push({
                   label: sizeLabel,
@@ -170,7 +205,9 @@ export default function ProductPage({ params }: any) {
                   stock: Number(v.stock || 0),
                 });
                 existing.stock = existing.stock + Number(v.stock || 0);
-                // prefer lower price if exists
+                existing.images = Array.from(
+                  new Set([...existing.images, ...variantImages, ...imageUrls])
+                );
                 if (!existing.salePrice && priceNum < existing.price) existing.salePrice = priceNum;
               }
             });
@@ -212,6 +249,12 @@ export default function ProductPage({ params }: any) {
     return () => abort.abort();
   }, [slug]);
 
+  const allProductImages = useMemo(() => {
+    if (!product) return [];
+    const images = product.variations.flatMap((variation) => variation.images ?? []);
+    return Array.from(new Set(images));
+  }, [product]);
+
   const selectedVariation = useMemo(() => {
     if (!product) return null;
     return (
@@ -222,7 +265,7 @@ export default function ProductPage({ params }: any) {
 
   useEffect(() => {
     if (!selectedVariation) return;
-    const image = selectedVariation.images[0] || '';
+    const image = selectedVariation.images[0] || allProductImages[0] || '';
     setActiveImage(image);
     const availableSize = selectedVariation.sizes.find(
       (size) => size.label === selectedSize && size.available
@@ -230,7 +273,14 @@ export default function ProductPage({ params }: any) {
     if (!availableSize) {
       setSelectedSize(null);
     }
-  }, [selectedVariation]);
+  }, [selectedVariation, allProductImages, selectedSize]);
+
+  const galleryImages = useMemo(() => {
+    if (!product) return [];
+    const variationImages = selectedVariation?.images ?? [];
+    if (!variationImages.length) return allProductImages;
+    return Array.from(new Set([...variationImages, ...allProductImages]));
+  }, [selectedVariation, allProductImages, product]);
 
   const price = selectedVariation?.salePrice ?? selectedVariation?.price ?? product?.defaultPrice;
   const originalPrice = selectedVariation?.price ?? product?.defaultPrice;
@@ -251,6 +301,14 @@ export default function ProductPage({ params }: any) {
 
   const handleColorChange = (variation: ColorVariation) => {
     setSelectedColor(variation.slug);
+    const variantImage = variation.images[0] || allProductImages[0] || '';
+    if (variantImage) {
+      setActiveImage(variantImage);
+      setImageLoaded(false);
+    }
+    setSelectedSize((prev) =>
+      prev && variation.sizes.some((size) => size.label === prev && size.available) ? prev : null
+    );
   };
 
   const handleSizeChange = (size: SizeOption) => {
@@ -328,7 +386,10 @@ export default function ProductPage({ params }: any) {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              {(loading ? Array.from({ length: 3 }) : currentImages).map((image, index) => (
+              {(loading
+                ? Array.from({ length: 3 }, (_, index) => `loading-${index}`)
+                : galleryImages
+              ).map((image, index) => (
                 <button
                   key={loading ? index : image}
                   type="button"
