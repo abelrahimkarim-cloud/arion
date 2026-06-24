@@ -58,7 +58,19 @@ class ProductController extends Controller
 
     public function adminIndex()
     {
-        return response()->json(Product::with(['category', 'variants'])->orderBy('created_at', 'desc')->get());
+        $products = Product::with(['category', 'images', 'variants'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($product) {
+                $defaultImg = null;
+                if ($product->relationLoaded('images') && $product->images->count()) {
+                    $defaultImg = $product->images->firstWhere('is_default') ?? $product->images->first();
+                }
+                $product->default_image = $defaultImg ? url('/storage/' . ltrim($defaultImg->path, '/')) : null;
+                return $product;
+            });
+
+        return response()->json($products);
     }
 
     public function adminShow(Product $product)
