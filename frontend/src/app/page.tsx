@@ -21,14 +21,20 @@ export default function HomePage() {
         const BACKEND_URL = 'http://127.0.0.1:8000';
 
         // Transform API response to match frontend expectations
-        const transformedProducts = productsData.map((product: any) => ({
-          ...product,
-          image: product.images?.[0]?.path
-            ? `${BACKEND_URL}/storage/${product.images[0].path.replace(/^\/+/, '')}`
-            : defaultImage,
-          price:
-            typeof product.price === 'string' ? Number.parseFloat(product.price) : product.price,
-        }));
+        const transformedProducts = productsData.map((product: any) => {
+          const defaultImg = Array.isArray(product.images)
+            ? product.images.find((i: any) => i.is_default) || product.images[0]
+            : null;
+          return {
+            ...product,
+            image:
+              defaultImg && defaultImg.path
+                ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
+                : defaultImage,
+            price:
+              typeof product.price === 'string' ? Number.parseFloat(product.price) : product.price,
+          };
+        });
 
         setProducts(transformedProducts);
         setLoading(false);

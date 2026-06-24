@@ -1,15 +1,46 @@
 import Link from 'next/link';
-
-const products = Array.from({ length: 8 }, (_, index) => ({
-  id: index + 1,
-  name: `Street Essential ${index + 1}`,
-  slug: `street-essential-${index + 1}`,
-  price: 45 + index * 12,
-  image: '/images/products/card-1.jpg',
-  badge: index % 2 === 0 ? 'New' : 'Popular',
-}));
+import { useEffect, useState } from 'react';
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const defaultImage =
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23e5e7eb" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%239ca3af"%3EImage Not Found%3C/text%3E%3C/svg%3E';
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/products');
+        const data = await res.json();
+        const productsData = data.data || data;
+        const BACKEND_URL = 'http://127.0.0.1:8000';
+
+        const transformed = productsData.map((product: any) => {
+          const defaultImg = Array.isArray(product.images)
+            ? product.images.find((i: any) => i.is_default) || product.images[0]
+            : null;
+          return {
+            ...product,
+            image: defaultImg && defaultImg.path
+              ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
+              : defaultImage,
+            price: typeof product.price === 'string' ? Number.parseFloat(product.price) : product.price,
+            badge: product.is_new ? 'New' : product.is_best_seller ? 'Popular' : '',
+          };
+        });
+
+        setProducts(transformed);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <main className="min-h-screen bg-surface text-brand">
       <section className="mx-auto max-w-6xl px-6 py-14 sm:px-10">
@@ -29,23 +60,28 @@ export default function ShopPage() {
             </button>
           </div>
         </div>
+
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {products.map((product) => (
-            <Link
-              href={`/product/${product.slug}`}
-              key={product.id}
-              className="group overflow-hidden rounded-[2rem] bg-white shadow-soft transition hover:-translate-y-1"
-            >
-              <img src={product.image} alt={product.name} className="h-72 w-full object-cover" />
-              <div className="p-6">
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-500">
-                  {product.badge}
-                </span>
-                <h2 className="mt-4 text-xl font-semibold text-brand">{product.name}</h2>
-                <p className="mt-3 text-lg font-bold text-accent">${product.price}</p>
-              </div>
-            </Link>
-          ))}
+          {loading ? (
+            <div className="col-span-3 text-center text-slate-500">Loading products…</div>
+          ) : (
+            products.map((product) => (
+              <Link
+                href={`/product/${product.slug}`}
+                key={product.id}
+                className="group overflow-hidden rounded-[2rem] bg-white shadow-soft transition hover:-translate-y-1"
+              >
+                <img src={product.image} alt={product.name} className="h-72 w-full object-cover" />
+                <div className="p-6">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-500">
+                    {product.badge}
+                  </span>
+                  <h2 className="mt-4 text-xl font-semibold text-brand">{product.name}</h2>
+                  <p className="mt-3 text-lg font-bold text-accent">${product.price}</p>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </section>
     </main>
