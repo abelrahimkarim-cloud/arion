@@ -199,102 +199,135 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
               </div>
             </div>
 
-            {/* Color selector */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
-              <label className="block text-sm font-semibold text-slate-900">
-                Color: <span className="text-orange-600">{selectedVariation?.label}</span>
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {product.variations.map((variation) => {
-                  const disabled = variation.stock === 0;
-                  const active = selectedVariation?.slug === variation.slug;
-                  return (
-                    <button
-                      key={variation.slug}
-                      type="button"
-                      onClick={() => handleColorChange(variation)}
-                      disabled={disabled}
-                      className={`rounded-full border-2 px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 ${
-                        active
-                          ? 'border-orange-500 bg-orange-50 text-orange-700'
-                          : disabled
-                            ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
-                            : 'border-slate-300 bg-white text-slate-900 hover:border-orange-300'
-                      }`}
-                      aria-pressed={active}
-                      aria-label={`${variation.label} color${disabled ? ' (out of stock)' : ''}`}
-                    >
-                      {variation.label}
-                    </button>
-                  );
-                })}
+            {/* Combined Selection Card: Color, Size, Quantity */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-6 border-2 border-orange-200">
+              {/* Color selector with image thumbnails */}
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-slate-900">
+                  Color: <span className="text-orange-600">{selectedVariation?.label}</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {product.variations.map((variation) => {
+                    const disabled = variation.stock === 0;
+                    const active = selectedVariation?.slug === variation.slug;
+                    const mainImage = variation.images?.[0];
+                    return (
+                      <button
+                        key={variation.slug}
+                        type="button"
+                        onClick={() => handleColorChange(variation)}
+                        disabled={disabled}
+                        className={`flex flex-col items-center gap-2 transition focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+                          disabled ? 'cursor-not-allowed opacity-50' : ''
+                        }`}
+                        aria-pressed={active}
+                        aria-label={`${variation.label} color${disabled ? ' (out of stock)' : ''}`}
+                      >
+                        {/* Color thumbnail with border indicator */}
+                        <div
+                          className={`h-16 w-16 rounded-lg border-2 overflow-hidden transition ${
+                            active
+                              ? 'border-orange-500 shadow-md'
+                              : 'border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          {mainImage ? (
+                            <img
+                              src={mainImage}
+                              alt={variation.label}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-slate-100 flex items-center justify-center text-xs text-slate-400">
+                              No image
+                            </div>
+                          )}
+                        </div>
+                        {/* Color label */}
+                        <span
+                          className={`text-xs font-semibold ${
+                            active ? 'text-orange-600' : 'text-slate-700'
+                          }`}
+                        >
+                          {variation.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Size selector */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-900">Size</label>
-                <button
-                  type="button"
-                  className="text-xs text-orange-600 hover:text-orange-700 font-medium"
-                  aria-label="Size guide"
-                >
-                  Size Guide
-                </button>
-              </div>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                {selectedVariation?.sizes.map((size) => (
+              {/* Divider */}
+              <div className="border-t border-slate-200" />
+
+              {/* Size selector */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-slate-900">Taille (Size)</label>
                   <button
-                    key={size.label}
                     type="button"
-                    onClick={() => size.available && setSelectedSize(size.label)}
-                    disabled={!size.available}
-                    className={`rounded-lg border-2 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-orange-400 ${
-                      selectedSize === size.label
-                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                        : size.available
-                          ? 'border-slate-300 bg-white text-slate-900 hover:border-orange-300'
-                          : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
-                    }`}
-                    aria-pressed={selectedSize === size.label}
-                    aria-label={`${size.label}${!size.available ? ' (unavailable)' : ''}`}
+                    className="text-xs text-orange-600 hover:text-orange-700 font-medium"
+                    aria-label="Size guide"
                   >
-                    {size.label}
+                    Size Guide
                   </button>
-                ))}
+                </div>
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
+                  {selectedVariation?.sizes.map((size) => (
+                    <button
+                      key={size.label}
+                      type="button"
+                      onClick={() => size.available && setSelectedSize(size.label)}
+                      disabled={!size.available}
+                      className={`rounded-lg border-2 py-2 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+                        selectedSize === size.label
+                          ? 'border-orange-500 bg-orange-50 text-orange-700'
+                          : size.available
+                            ? 'border-slate-300 bg-white text-slate-900 hover:border-orange-300'
+                            : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                      }`}
+                      aria-pressed={selectedSize === size.label}
+                      aria-label={`${size.label}${!size.available ? ' (unavailable)' : ''}`}
+                    >
+                      {size.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Quantity selector */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
-              <label className="text-sm font-semibold text-slate-900">Quantity</label>
-              <div className="flex items-center gap-3 w-fit">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 hover:border-orange-300 hover:text-orange-600 transition"
-                  aria-label="Decrease quantity"
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  max="999"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-16 text-center border border-slate-300 rounded-lg py-2 font-semibold focus:border-orange-500 focus:outline-none"
-                  aria-label="Quantity"
-                />
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 hover:border-orange-300 hover:text-orange-600 transition"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
+              {/* Divider */}
+              <div className="border-t border-slate-200" />
+
+              {/* Quantity selector */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-slate-900">Qty</label>
+                <div className="flex items-center gap-3 w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-slate-300 hover:border-orange-300 hover:text-orange-600 transition font-bold text-lg"
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-16 text-center border-2 border-slate-300 rounded-lg py-2 font-semibold focus:border-orange-500 focus:outline-none"
+                    aria-label="Quantity"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-slate-300 hover:border-orange-300 hover:text-orange-600 transition font-bold text-lg"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
