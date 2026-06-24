@@ -22,10 +22,12 @@ export default function ShopPage() {
             : null;
           return {
             ...product,
-            image: defaultImg && defaultImg.path
-              ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
-              : defaultImage,
-            price: typeof product.price === 'string' ? Number.parseFloat(product.price) : product.price,
+            image:
+              defaultImg && defaultImg.path
+                ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
+                : defaultImage,
+            price:
+              typeof product.price === 'string' ? Number.parseFloat(product.price) : product.price,
             badge: product.is_new ? 'New' : product.is_best_seller ? 'Popular' : '',
           };
         });

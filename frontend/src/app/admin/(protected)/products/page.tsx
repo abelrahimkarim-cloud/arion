@@ -46,13 +46,21 @@ export default function AdminProductsPage() {
     const imageUrl = product.default_image
       ? product.default_image
       : defaultImg && defaultImg.path
-      ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
-      : null;
+        ? `${BACKEND_URL}/storage/${defaultImg.path.replace(/^\/+/, '')}`
+        : null;
 
     const imageCell = imageUrl ? (
-      <img key={`img-${product.id}`} src={imageUrl} alt={product.name} className="h-12 w-12 rounded object-cover" />
+      <img
+        key={`img-${product.id}`}
+        src={imageUrl}
+        alt={product.name}
+        className="h-12 w-12 rounded object-cover"
+      />
     ) : (
-      <div key={`img-${product.id}`} className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-500">
+      <div
+        key={`img-${product.id}`}
+        className="flex h-12 w-12 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-500"
+      >
         No image
       </div>
     );
