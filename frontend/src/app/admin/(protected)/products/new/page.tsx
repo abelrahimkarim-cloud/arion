@@ -511,117 +511,144 @@ export default function AdminAddProductPage() {
 
                   {expanded ? (
                     <div className="border-t border-slate-200 px-4 py-4">
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <label className="block">
-                          <span className="text-xs text-slate-500">Price</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={variant.price}
-                            onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
-                            placeholder="0.00"
-                          />
-                        </label>
-
-                        <label className="block">
-                          <span className="text-xs text-slate-500">Compare at price</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={variant.compare_price}
-                            onChange={(e) =>
-                              handleVariantChange(index, 'compare_price', e.target.value)
-                            }
-                            className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
-                            placeholder="0.00"
-                          />
-                        </label>
-
-                        <label className="block">
-                          <span className="text-xs text-slate-500">Untracked</span>
-                          <input
-                            type="number"
-                            value={variant.stock}
-                            onChange={(e) => handleVariantChange(index, 'stock', e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
-                            placeholder="0"
-                            min="0"
-                          />
-                        </label>
-                      </div>
-
-                      <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                        <label className="block">
-                          <span className="text-xs text-slate-500">Size</span>
-                          <input
-                            type="text"
-                            value={variant.size}
-                            onChange={(e) => handleVariantChange(index, 'size', e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
-                            placeholder="XS, S, M, L"
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-xs text-slate-500">Color</span>
-                          <input
-                            type="text"
-                            value={variant.color}
-                            onChange={(e) => handleVariantChange(index, 'color', e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
-                            placeholder="Black, White"
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-xs text-slate-500">SKU</span>
-                          <input
-                            type="text"
-                            value={variant.sku}
-                            onChange={(e) => handleVariantChange(index, 'sku', e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
-                            placeholder="SKU-001"
-                          />
-                        </label>
-                      </div>
-
-                      <div className="mt-4">
-                        <p className="text-xs font-semibold text-slate-600">Variant image</p>
-                        <div className="mt-2 flex flex-wrap gap-3">
-                          {form.images.map((image, imageIndex) => {
-                            const path = image.path;
-                            const preview = getPreviewUrl(path);
-                            const checked = variant.image === path;
-                            return (
-                              <label
-                                key={imageIndex}
-                                className="flex items-center gap-2 rounded-2xl border p-2"
-                              >
-                                <input
-                                  type="radio"
-                                  name={`variant-image-${index}`}
-                                  checked={checked}
-                                  onChange={() => setVariantImage(index, path)}
-                                  className="h-4 w-4"
-                                />
-                                {preview ? (
+                      <div className="grid gap-6 lg:grid-cols-[180px_1fr]">
+                        {/* Left: Vertical Thumbnail Gallery */}
+                        <div className="space-y-3">
+                          <p className="text-xs font-semibold text-slate-600">Variant image</p>
+                          {form.images.length === 0 ? (
+                            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+                              <p className="text-xs text-slate-500">Add images to library first</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {/* Main preview */}
+                              <div className="flex h-48 w-full items-center justify-center overflow-hidden rounded-3xl border-2 border-slate-200 bg-slate-100">
+                                {variantPreview ? (
                                   <img
-                                    src={preview}
-                                    alt={image.alt_text || `Image ${imageIndex + 1}`}
-                                    className="h-12 w-12 object-cover rounded"
+                                    src={variantPreview}
+                                    alt="Variant preview"
+                                    className="h-full w-full object-cover"
                                   />
-                                ) : null}
-                                <span className="text-sm">
-                                  {image.alt_text || `Image ${imageIndex + 1}`}
-                                </span>
-                              </label>
-                            );
-                          })}
+                                ) : (
+                                  <span className="text-xs text-slate-400">No image selected</span>
+                                )}
+                              </div>
+                              {/* Vertical thumbnails */}
+                              <div className="space-y-2">
+                                {form.images.map((image, imageIndex) => {
+                                  const path = image.path;
+                                  const preview = getPreviewUrl(path);
+                                  const checked = variant.image === path;
+                                  return (
+                                    <button
+                                      key={imageIndex}
+                                      type="button"
+                                      onClick={() => setVariantImage(index, path)}
+                                      className={`flex h-16 w-full items-center justify-center overflow-hidden rounded-2xl border-2 transition ${
+                                        checked
+                                          ? 'border-orange-500 shadow-sm'
+                                          : 'border-slate-200 hover:border-slate-300'
+                                      }`}
+                                      aria-pressed={checked}
+                                    >
+                                      {preview ? (
+                                        <img
+                                          src={preview}
+                                          alt={image.alt_text || `Image ${imageIndex + 1}`}
+                                          className="h-full w-full object-cover"
+                                        />
+                                      ) : (
+                                        <span className="text-xs text-slate-400">No preview</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        {form.images.length === 0 && (
-                          <p className="mt-2 text-xs text-slate-500">
-                            Add product images first to assign a variant image.
-                          </p>
-                        )}
+
+                        {/* Right: Form Fields */}
+                        <div className="space-y-4">
+                          <div className="grid gap-4 sm:grid-cols-3">
+                            <label className="block">
+                              <span className="text-xs text-slate-500">Price</span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={variant.price}
+                                onChange={(e) =>
+                                  handleVariantChange(index, 'price', e.target.value)
+                                }
+                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
+                                placeholder="0.00"
+                              />
+                            </label>
+
+                            <label className="block">
+                              <span className="text-xs text-slate-500">Compare at price</span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={variant.compare_price}
+                                onChange={(e) =>
+                                  handleVariantChange(index, 'compare_price', e.target.value)
+                                }
+                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
+                                placeholder="0.00"
+                              />
+                            </label>
+
+                            <label className="block">
+                              <span className="text-xs text-slate-500">Stock</span>
+                              <input
+                                type="number"
+                                value={variant.stock}
+                                onChange={(e) =>
+                                  handleVariantChange(index, 'stock', e.target.value)
+                                }
+                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
+                                placeholder="0"
+                                min="0"
+                              />
+                            </label>
+                          </div>
+
+                          <div className="grid gap-4 sm:grid-cols-3">
+                            <label className="block">
+                              <span className="text-xs text-slate-500">Size</span>
+                              <input
+                                type="text"
+                                value={variant.size}
+                                onChange={(e) => handleVariantChange(index, 'size', e.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
+                                placeholder="XS, S, M, L"
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="text-xs text-slate-500">Color</span>
+                              <input
+                                type="text"
+                                value={variant.color}
+                                onChange={(e) =>
+                                  handleVariantChange(index, 'color', e.target.value)
+                                }
+                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
+                                placeholder="Black, White"
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="text-xs text-slate-500">SKU</span>
+                              <input
+                                type="text"
+                                value={variant.sku}
+                                onChange={(e) => handleVariantChange(index, 'sku', e.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-700"
+                                placeholder="SKU-001"
+                              />
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ) : null}

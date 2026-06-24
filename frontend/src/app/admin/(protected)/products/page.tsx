@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { adminFetch } from '@/lib/adminAuth';
+import { useRouter } from 'next/navigation';
+import { adminFetch, adminLogout } from '@/lib/adminAuth';
 import AdminTable from '@/components/admin/AdminTable';
 import { useAdminAuthGuard } from '@/lib/useAdminAuthGuard';
 
 export default function AdminProductsPage() {
   useAdminAuthGuard();
+  const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,6 +17,11 @@ export default function AdminProductsPage() {
     const loadProducts = async () => {
       try {
         const response = await adminFetch('/api/admin/products');
+        if (response.status === 401) {
+          adminLogout();
+          router.replace('/admin/login');
+          return;
+        }
         const result = await response.json();
         const productsData = Array.isArray(result) ? result : result.data || [];
         setProducts(productsData);
@@ -26,7 +33,7 @@ export default function AdminProductsPage() {
     };
 
     loadProducts();
-  }, []);
+  }, [router]);
 
   const rows = products.map((product) => [
     product.id,

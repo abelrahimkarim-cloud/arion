@@ -1,0 +1,45 @@
+
+> streetwear-ecommerce-frontend@1.0.0 build
+> next build
+
+   Ôû¦ Next.js 15.2.1
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/16) ...
+   Generating static pages (4/16) 
+   Generating static pages (8/16) 
+   Generating static pages (12/16) 
+ Ô£ô Generating static pages (16/16)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+Ôöî Ôùï /                                    2.41 kB         106 kB
+Ôö£ Ôùï /_not-found                            977 B         101 kB
+Ôö£ Ôùï /admin                                 937 B         101 kB
+Ôö£ Ôùï /admin/categories                    2.19 kB         103 kB
+Ôö£ Ôùï /admin/customers                     1.84 kB         105 kB
+Ôö£ Ôùï /admin/dashboard                     1.64 kB         102 kB
+Ôö£ Ôùï /admin/login                         1.53 kB         102 kB
+Ôö£ Ôùï /admin/orders                        1.84 kB         105 kB
+Ôö£ Ôùï /admin/products                      2.06 kB         106 kB
+Ôö£ ãÆ /admin/products/[id]                 4.35 kB         105 kB
+Ôö£ Ôùï /admin/products/new                  3.98 kB         104 kB
+Ôö£ Ôùï /admin/settings                      1.62 kB         102 kB
+Ôö£ Ôùï /checkout                              145 B         101 kB
+Ôö£ Ôùï /login                               1.53 kB         102 kB
+Ôö£ ãÆ /product/[slug]                      3.71 kB         107 kB
+Ôöö Ôùï /shop                                  172 B         104 kB
++ First Load JS shared by all             101 kB
+  Ôö£ chunks/4bd1b696-601a5bb82ba6f64d.js  53.3 kB
+  Ôö£ chunks/684-39bf9f441e9ab9cd.js       45.3 kB
+  Ôöö other shared chunks (total)          1.98 kB
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

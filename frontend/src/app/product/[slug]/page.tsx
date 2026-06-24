@@ -191,7 +191,9 @@ export default function ProductPage({ params }: any) {
                 stock: Number(v.stock || 0),
               });
               existing.stock = existing.stock + Number(v.stock || 0);
-              existing.images = Array.from(new Set([...existing.images, ...variantImages, ...imageUrls]));
+              existing.images = Array.from(
+                new Set([...existing.images, ...variantImages, ...imageUrls])
+              );
               if (!existing.salePrice && priceNum < existing.price) existing.salePrice = priceNum;
             }
           });
