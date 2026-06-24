@@ -139,7 +139,9 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
                   <span className="text-2xl font-bold">4.2</span>
                   <div className="flex text-orange-400">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <span key={i} className={i < 4 ? '' : 'opacity-50'}>★</span>
+                      <span key={i} className={i < 4 ? '' : 'opacity-50'}>
+                        ★
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -166,9 +168,27 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
 
               <div className="space-y-3 pt-2">
                 {[
-                  { name: 'ro***st', country: '🇨🇭', rating: 5, date: 'Jun 19, 2026', text: 'Great fit and quality.' },
-                  { name: 'mi***00', country: '🇬🇧', rating: 5, date: 'Jun 10, 2026', text: 'Love the fabric.' },
-                  { name: 'ma***ri', country: '🇮🇹', rating: 4, date: 'May 21, 2026', text: 'Good value for money.' },
+                  {
+                    name: 'ro***st',
+                    country: '🇨🇭',
+                    rating: 5,
+                    date: 'Jun 19, 2026',
+                    text: 'Great fit and quality.',
+                  },
+                  {
+                    name: 'mi***00',
+                    country: '🇬🇧',
+                    rating: 5,
+                    date: 'Jun 10, 2026',
+                    text: 'Love the fabric.',
+                  },
+                  {
+                    name: 'ma***ri',
+                    country: '🇮🇹',
+                    rating: 4,
+                    date: 'May 21, 2026',
+                    text: 'Good value for money.',
+                  },
                 ].map((r, idx) => (
                   <div key={idx} className="flex items-start gap-3">
                     <div className="h-9 w-9 rounded-full bg-slate-100" />
@@ -184,7 +204,9 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
                 ))}
 
                 <div className="pt-3">
-                  <button className="rounded-full border px-4 py-2 text-sm font-semibold">See all reviews</button>
+                  <button className="rounded-full border px-4 py-2 text-sm font-semibold">
+                    See all reviews
+                  </button>
                 </div>
               </div>
             </div>
