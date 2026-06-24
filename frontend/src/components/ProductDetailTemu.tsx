@@ -131,6 +131,63 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
                 ))}
               </div>
             )}
+
+            {/* Reviews summary moved under images (static for now) */}
+            <div className="rounded-2xl bg-white p-4 shadow-sm space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-2xl font-bold">4.2</span>
+                  <div className="flex text-orange-400">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className={i < 4 ? '' : 'opacity-50'}>★</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-sm text-slate-500">2.5k reviews</div>
+              </div>
+
+              <div className="grid gap-2">
+                {[
+                  { star: '5', pct: '70%' },
+                  { star: '4', pct: '15%' },
+                  { star: '3', pct: '8%' },
+                  { star: '2', pct: '4%' },
+                  { star: '1', pct: '3%' },
+                ].map((row) => (
+                  <div key={row.star} className="flex items-center gap-2 text-xs">
+                    <span className="w-6 text-slate-500">{row.star}★</span>
+                    <div className="h-2 flex-1 bg-slate-200 rounded overflow-hidden">
+                      <div className="h-full bg-orange-500" style={{ width: row.pct }} />
+                    </div>
+                    <span className="w-10 text-right text-slate-500">{row.pct}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3 pt-2">
+                {[
+                  { name: 'ro***st', country: '🇨🇭', rating: 5, date: 'Jun 19, 2026', text: 'Great fit and quality.' },
+                  { name: 'mi***00', country: '🇬🇧', rating: 5, date: 'Jun 10, 2026', text: 'Love the fabric.' },
+                  { name: 'ma***ri', country: '🇮🇹', rating: 4, date: 'May 21, 2026', text: 'Good value for money.' },
+                ].map((r, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <div className="h-9 w-9 rounded-full bg-slate-100" />
+                    <div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-semibold text-slate-900">{r.name}</span>
+                        <span className="text-xs text-slate-500">{r.country}</span>
+                        <span className="text-xs text-slate-400">· {r.date}</span>
+                      </div>
+                      <div className="text-sm text-slate-700 mt-1">{r.text}</div>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="pt-3">
+                  <button className="rounded-full border px-4 py-2 text-sm font-semibold">See all reviews</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right: Order panel */}
@@ -151,86 +208,7 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
               {/* Short description shown directly under the title */}
               <p className="mt-2 text-sm text-slate-700">{product.description}</p>
 
-              {/* Reviews summary (static for now) */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-2xl font-bold">4.2</span>
-                    <div className="flex text-orange-400">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={i < 4 ? '' : 'opacity-50'}>
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-sm text-slate-500">2.5k reviews</div>
-                </div>
-
-                {/* Rating distribution */}
-                <div className="grid gap-2">
-                  {[
-                    { star: '5', pct: '70%' },
-                    { star: '4', pct: '15%' },
-                    { star: '3', pct: '8%' },
-                    { star: '2', pct: '4%' },
-                    { star: '1', pct: '3%' },
-                  ].map((row) => (
-                    <div key={row.star} className="flex items-center gap-2 text-xs">
-                      <span className="w-6 text-slate-500">{row.star}★</span>
-                      <div className="h-2 flex-1 bg-slate-200 rounded overflow-hidden">
-                        <div className="h-full bg-orange-500" style={{ width: row.pct }} />
-                      </div>
-                      <span className="w-10 text-right text-slate-500">{row.pct}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Sample reviews (static) */}
-                <div className="space-y-3 pt-2">
-                  {[
-                    {
-                      name: 'ro***st',
-                      country: '🇨🇭',
-                      rating: 5,
-                      date: 'Jun 19, 2026',
-                      text: 'Great fit and quality.',
-                    },
-                    {
-                      name: 'mi***00',
-                      country: '🇬🇧',
-                      rating: 5,
-                      date: 'Jun 10, 2026',
-                      text: 'Love the fabric.',
-                    },
-                    {
-                      name: 'ma***ri',
-                      country: '🇮🇹',
-                      rating: 4,
-                      date: 'May 21, 2026',
-                      text: 'Good value for money.',
-                    },
-                  ].map((r, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <div className="h-9 w-9 rounded-full bg-slate-100" />
-                      <div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-semibold text-slate-900">{r.name}</span>
-                          <span className="text-xs text-slate-500">{r.country}</span>
-                          <span className="text-xs text-slate-400">· {r.date}</span>
-                        </div>
-                        <div className="text-sm text-slate-700 mt-1">{r.text}</div>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="pt-3">
-                    <button className="rounded-full border px-4 py-2 text-sm font-semibold">
-                      See all reviews
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {/* Reviews moved to image column */}
 
               {/* Price section */}
               <div className="flex items-baseline gap-3 pt-2">
