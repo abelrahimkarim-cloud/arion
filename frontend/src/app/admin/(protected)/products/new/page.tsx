@@ -42,6 +42,7 @@ export default function AdminAddProductPage() {
       },
     ],
   });
+  const [activeTab, setActiveTab] = useState<'basic' | 'images' | 'variants'>('basic');
 
   useEffect(() => {
     setVariantExpanded(() => form.variants.map(() => false));
@@ -248,8 +249,42 @@ export default function AdminAddProductPage() {
         onSubmit={handleSave}
         className="space-y-8 rounded-3xl border border-slate-200 bg-white px-8 py-8 shadow-sm"
       >
+        {/* Tabs */}
+        <div className="mb-4">
+          <nav className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('basic')}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'basic' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200'
+              }`}
+            >
+              Basic information
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('images')}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'images' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200'
+              }`}
+            >
+              Gallery of images
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('variants')}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'variants' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200'
+              }`}
+            >
+              Variants
+            </button>
+          </nav>
+        </div>
+
         {/* Basic info */}
-        <div className="space-y-4 border-b border-slate-200 pb-6">
+        {activeTab === 'basic' && (
+          <div className="space-y-4 border-b border-slate-200 pb-6">
           <h2 className="text-lg font-semibold text-slate-900">Basic information</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
@@ -315,7 +350,8 @@ export default function AdminAddProductPage() {
         </div>
 
         {/* Flags */}
-        <div className="space-y-4 border-b border-slate-200 pb-6">
+        {activeTab === 'basic' && (
+          <div className="space-y-4 border-b border-slate-200 pb-6">
           <h2 className="text-lg font-semibold text-slate-900">Display settings</h2>
           <div className="space-y-3">
             <label className="flex items-center gap-3">
@@ -358,7 +394,8 @@ export default function AdminAddProductPage() {
         </div>
 
         {/* Images */}
-        <div className="space-y-4 border-b border-slate-200 pb-6">
+        {activeTab === 'images' && (
+          <div className="space-y-4 border-b border-slate-200 pb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Images</h2>
@@ -440,7 +477,8 @@ export default function AdminAddProductPage() {
         </div>
 
         {/* Variants */}
-        <div className="space-y-4 pb-6">
+        {activeTab === 'variants' && (
+          <div className="space-y-4 pb-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Variant options</h2>
