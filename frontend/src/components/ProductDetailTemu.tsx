@@ -148,6 +148,9 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
               {/* Title */}
               <h1 className="text-2xl font-bold text-slate-900 leading-tight">{product.name}</h1>
 
+              {/* Short description shown directly under the title */}
+              <p className="mt-2 text-sm text-slate-700">{product.description}</p>
+
               {/* Rating placeholder */}
               <div className="flex items-center gap-2">
                 <div className="flex gap-0.5">
@@ -373,11 +376,7 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
               </div>
             </div>
 
-            {/* Description */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
-              <h3 className="font-semibold text-slate-900">Description</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">{product.description}</p>
-            </div>
+            {/* Description moved up to appear right after the title card */}
           </div>
         </div>
       </div>
