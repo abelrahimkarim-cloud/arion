@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
@@ -67,10 +68,17 @@ class OrderController extends Controller
         }
 
         if (config('mail.mailers.smtp.host')) {
-            Mail::raw("New COD order received (#{$order->id}) from {$customer->name}.", function ($message) use ($setting) {
-                $message->to($setting->whatsapp_number . '@example.com');
-                $message->subject('New Order Received');
-            });
+            try {
+                Mail::raw("New COD order received (#{$order->id}) from {$customer->name}.", function ($message) use ($setting) {
+                    $message->to($setting->whatsapp_number . '@example.com');
+                    $message->subject('New Order Received');
+                });
+            } catch (\Throwable $exception) {
+                Log::error('Order email send failed', [
+                    'order_id' => $order->id,
+                    'exception' => $exception->getMessage(),
+                ]);
+            }
         }
 
         return response()->json(['message' => 'Order received successfully.', 'order_id' => $order->id], 201);

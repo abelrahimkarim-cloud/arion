@@ -69,7 +69,7 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
     return { label: 'In stock', color: 'text-green-600', bgColor: 'bg-green-50' };
   }, [selectedVariation?.stock]);
 
-  const handleAddToCart = () => {
+  const handleOrderNow = () => {
     if (!selectedSize) {
       alert('Please select a size');
       return;
@@ -406,16 +406,16 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
             {/* Add to cart button */}
             <button
               type="button"
-              onClick={handleAddToCart}
+              onClick={handleOrderNow}
               disabled={selectedVariation?.stock === 0 || !selectedSize}
               className={`w-full rounded-2xl py-4 text-lg font-bold transition focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 selectedVariation?.stock === 0 || !selectedSize
                   ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 focus:ring-orange-400 shadow-lg'
               }`}
-              aria-label={`Add ${quantity} item${quantity > 1 ? 's' : ''} to cart`}
+              aria-label={`Order ${quantity} item${quantity > 1 ? 's' : ''}`}
             >
-              {selectedVariation?.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              {selectedVariation?.stock === 0 ? 'Out of Stock' : 'Order Now'}
             </button>
 
             {/* Payment & Guarantee badges */}

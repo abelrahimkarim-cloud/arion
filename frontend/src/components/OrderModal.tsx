@@ -59,7 +59,7 @@ export default function OrderModal({
   const total = subtotal;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 py-6 sm:items-center sm:px-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-3 py-4 sm:items-center sm:px-5">
       <div
         className="absolute inset-0"
         onClick={() => {
@@ -67,8 +67,8 @@ export default function OrderModal({
         }}
       />
 
-      <div className="relative z-10 w-full max-w-3xl overflow-hidden rounded-[2rem] bg-white shadow-2xl transition-transform duration-300 ease-out sm:scale-100 sm:rounded-[3rem]">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+      <div className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[1.5rem] bg-white shadow-2xl transition-transform duration-300 ease-out sm:scale-100">
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Confirm Your Order</h2>
             <p className="text-sm text-slate-500">Review details and confirm your order.</p>
@@ -84,8 +84,8 @@ export default function OrderModal({
           </button>
         </div>
 
-        <div className="grid gap-5 p-5 sm:grid-cols-[1.05fr_0.95fr] sm:p-6">
-          <div className="space-y-5">
+        <div className="grid gap-4 p-4 sm:grid-cols-[1.1fr_0.9fr] sm:p-5">
+          <div className="space-y-4">
             <OrderSummary
               imageUrl={imageUrl}
               productName={productName}
@@ -110,17 +110,37 @@ export default function OrderModal({
             />
           </div>
 
-          <div className="space-y-4 rounded-[2rem] border border-slate-200 bg-slate-50 p-5">
-            <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="space-y-4 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-3xl bg-white p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-slate-900">Order Summary</h3>
-              <div className="mt-4 space-y-3 text-sm text-slate-600">
+              <div className="mt-3 space-y-3 text-sm text-slate-600">
                 <div className="flex justify-between">
                   <span>Product Price</span>
                   <span>{price.toFixed(2)} MAD</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <span>Quantity</span>
-                  <span>{quantity}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
+                      disabled={submitting}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-800 transition hover:border-orange-300"
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+                    <span className="min-w-[2rem] text-center font-semibold">{quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => onQuantityChange(quantity + 1)}
+                      disabled={submitting}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-800 transition hover:border-orange-300"
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery</span>
@@ -133,19 +153,31 @@ export default function OrderModal({
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-5 shadow-sm">
+            <div className="rounded-3xl bg-white p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-slate-900">Customer Info</h3>
               <div className="mt-4 space-y-2 text-sm text-slate-600">
-                <p><span className="font-semibold text-slate-900">Name:</span> {customer.name || '—'}</p>
-                <p><span className="font-semibold text-slate-900">Phone:</span> {customer.phone || '—'}</p>
-                <p><span className="font-semibold text-slate-900">City:</span> {customer.city || '—'}</p>
-                <p><span className="font-semibold text-slate-900">Address:</span> {customer.address || '—'}</p>
+                <p>
+                  <span className="font-semibold text-slate-900">Name:</span> {customer.name || '—'}
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-900">Phone:</span>{' '}
+                  {customer.phone || '—'}
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-900">City:</span> {customer.city || '—'}
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-900">Address:</span>{' '}
+                  {customer.address || '—'}
+                </p>
               </div>
             </div>
 
             <div className="rounded-3xl bg-white p-5 shadow-sm">
               <h3 className="text-sm font-semibold text-slate-900">Notes</h3>
-              <p className="mt-3 text-sm text-slate-600">{customer.notes || 'No additional notes'}</p>
+              <p className="mt-3 text-sm text-slate-600">
+                {customer.notes || 'No additional notes'}
+              </p>
             </div>
           </div>
         </div>

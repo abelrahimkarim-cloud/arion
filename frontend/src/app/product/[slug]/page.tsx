@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ProductDetailTemu from '@/components/ProductDetailTemu';
 
 type SizeOption = {
   label: string;
   available: boolean;
   stock: number;
+  variantId?: number;
 };
 
 type ColorVariation = {
@@ -30,6 +32,15 @@ type Product = {
   related: { name: string; slug: string }[];
 };
 
+type OrderPayload = {
+  color: string;
+  size: string;
+  quantity: number;
+  variantId?: number | null;
+  imageUrl?: string | null;
+  price: number;
+};
+
 const sampleProduct: Product = {
   name: 'Icon Track Jacket',
   description:
@@ -47,10 +58,10 @@ const sampleProduct: Product = {
       stock: 4,
       images: ['/images/products/jacket-1.jpg', '/images/products/jacket-2.jpg'],
       sizes: [
-        { label: 'S', available: true, stock: 2 },
-        { label: 'M', available: true, stock: 1 },
-        { label: 'L', available: true, stock: 0 },
-        { label: 'XL', available: false, stock: 0 },
+        { label: 'S', available: true, stock: 2, variantId: 1 },
+        { label: 'M', available: true, stock: 1, variantId: 2 },
+        { label: 'L', available: true, stock: 0, variantId: 3 },
+        { label: 'XL', available: false, stock: 0, variantId: 4 },
       ],
     },
     {
@@ -60,10 +71,10 @@ const sampleProduct: Product = {
       stock: 8,
       images: ['/images/products/jacket-4.jpg', '/images/products/jacket-5.jpg'],
       sizes: [
-        { label: 'S', available: true, stock: 3 },
-        { label: 'M', available: true, stock: 3 },
-        { label: 'L', available: true, stock: 2 },
-        { label: 'XL', available: true, stock: 0 },
+        { label: 'S', available: true, stock: 3, variantId: 5 },
+        { label: 'M', available: true, stock: 3, variantId: 6 },
+        { label: 'L', available: true, stock: 2, variantId: 7 },
+        { label: 'XL', available: true, stock: 0, variantId: 8 },
       ],
     },
     {
@@ -73,10 +84,10 @@ const sampleProduct: Product = {
       stock: 0,
       images: ['/images/products/jacket-3.jpg', '/images/products/jacket-6.jpg'],
       sizes: [
-        { label: 'S', available: false, stock: 0 },
-        { label: 'M', available: false, stock: 0 },
-        { label: 'L', available: false, stock: 0 },
-        { label: 'XL', available: false, stock: 0 },
+        { label: 'S', available: false, stock: 0, variantId: 9 },
+        { label: 'M', available: false, stock: 0, variantId: 10 },
+        { label: 'L', available: false, stock: 0, variantId: 11 },
+        { label: 'XL', available: false, stock: 0, variantId: 12 },
       ],
     },
   ],
@@ -90,6 +101,7 @@ export default function ProductPage({ params }: any) {
   const resolvedParams =
     params && typeof (params as any)?.then === 'function' ? React.use(params) : params;
   const { slug } = resolvedParams || {};
+  const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -130,6 +142,36 @@ export default function ProductPage({ params }: any) {
     return resolved.length ? Array.from(new Set([...resolved, ...fallbackImages])) : fallbackImages;
   };
 
+  const getVariantId = (color: string, size: string) => {
+    const variation = product?.variations.find((v) => v.slug === color);
+    return variation?.sizes.find((s) => s.label === size)?.variantId ?? null;
+  };
+
+  const getImageForColor = (color: string) => {
+    const variation = product?.variations.find((v) => v.slug === color);
+    return variation?.images?.[0] ?? null;
+  };
+
+  const openOrder = (color: string, size: string, quantity: number) => {
+    const variantId = getVariantId(color, size);
+    const imageUrl = getImageForColor(color) || '';
+    if (!variantId) return;
+
+    const params = new URLSearchParams({
+      product_name: product?.name || '',
+      variant_id: String(variantId),
+      color,
+      size,
+      quantity: String(quantity),
+      price: String(
+        product?.variations.find((v) => v.slug === color)?.price ?? product?.defaultPrice ?? 0
+      ),
+      image_url: imageUrl,
+    });
+
+    router.push(`/checkout?${params.toString()}`);
+  };
+
   useEffect(() => {
     if (!slug) {
       globalThis.setTimeout(() => {
@@ -162,9 +204,10 @@ export default function ProductPage({ params }: any) {
           const variationMap: Record<string, ColorVariation> = {};
 
           variants.forEach((v: any) => {
-            const colorKey = (v.color || 'default').toString();
+            const colorKey = (v.color || 'Default').toString();
             const sizeLabel = v.size ? v.size.toString().toUpperCase() : 'ONE';
-            const priceNum = v.price ? Number(v.price) : Number(data.price || 0);
+            const priceNum = Number(v.price ?? data.price ?? 0);
+            const stockNum = Number(v.stock ?? 0);
             const variantImages = getVariantImages(v, base, imageUrls);
 
             if (!variationMap[colorKey]) {
@@ -173,52 +216,55 @@ export default function ProductPage({ params }: any) {
                 slug: colorKey.toLowerCase().replace(/\s+/g, '-'),
                 price: priceNum,
                 salePrice: undefined,
-                stock: Number(v.stock || 0),
+                stock: stockNum,
                 images: variantImages,
-                sizes: [
-                  {
-                    label: sizeLabel,
-                    available: Number(v.stock || 0) > 0,
-                    stock: Number(v.stock || 0),
-                  },
-                ],
+                sizes: [],
               };
             } else {
-              const existing = variationMap[colorKey];
-              existing.sizes.push({
-                label: sizeLabel,
-                available: Number(v.stock || 0) > 0,
-                stock: Number(v.stock || 0),
-              });
-              existing.stock = existing.stock + Number(v.stock || 0);
-              existing.images = Array.from(
-                new Set([...existing.images, ...variantImages, ...imageUrls])
+              variationMap[colorKey].stock = Math.max(variationMap[colorKey].stock, stockNum);
+              variationMap[colorKey].images = Array.from(
+                new Set([...variationMap[colorKey].images, ...variantImages])
               );
-              if (!existing.salePrice && priceNum < existing.price) existing.salePrice = priceNum;
             }
+
+            variationMap[colorKey].sizes.push({
+              label: sizeLabel,
+              available: stockNum > 0,
+              stock: stockNum,
+              variantId: Number(v.id),
+            });
           });
 
+          const variations = Object.values(variationMap);
           const mappedProduct: Product = {
-            name: data.name || 'Product',
+            name: data.name || sampleProduct.name,
             description: data.description || '',
-            defaultPrice: Number(data.price || 0),
+            defaultPrice: Number(data.price ?? 0),
             defaultSalePrice: undefined,
             sku: data.sku || data.slug || '',
-            category: data.category?.name || (data.category_id ? String(data.category_id) : ''),
-            variations: Object.values(variationMap).length
-              ? Object.values(variationMap)
-              : [
-                  {
-                    label: 'Default',
-                    slug: 'default',
-                    price: Number(data.price || 0),
-                    salePrice: undefined,
-                    stock: 0,
-                    images: imageUrls,
-                    sizes: [],
-                  },
-                ],
-            related: [],
+            category: data.category?.name || data.category || 'Apparel',
+            variations:
+              variations.length > 0
+                ? variations
+                : [
+                    {
+                      label: 'Default',
+                      slug: 'default',
+                      price: Number(data.price ?? 0),
+                      salePrice: undefined,
+                      stock: Number(data.stock ?? 0),
+                      images: imageUrls,
+                      sizes: [
+                        {
+                          label: 'ONE',
+                          available: Number(data.stock ?? 0) > 0,
+                          stock: Number(data.stock ?? 0),
+                          variantId: data.id ? Number(data.id) : undefined,
+                        },
+                      ],
+                    },
+                  ],
+            related: Array.isArray(data.related) ? data.related : [],
           };
 
           setProduct(mappedProduct);
@@ -235,8 +281,7 @@ export default function ProductPage({ params }: any) {
   }, [slug]);
 
   const handleAddToCart = (color: string, size: string, quantity: number) => {
-    console.log(`Added to cart: ${quantity}x ${color} - ${size}`);
-    // TODO: Integrate with your cart system
+    openOrder(color, size, quantity);
   };
 
   if (loading) {
@@ -251,7 +296,9 @@ export default function ProductPage({ params }: any) {
   }
 
   return product ? (
-    <ProductDetailTemu product={product} onAddToCart={handleAddToCart} />
+    <>
+      <ProductDetailTemu product={product} onAddToCart={handleAddToCart} />
+    </>
   ) : (
     <main className="min-h-screen bg-slate-50 flex items-center justify-center">
       <p className="text-slate-600">Product not found</p>
