@@ -1,4 +1,4 @@
-export const BACKEND_URL = 'http://127.0.0.1:8000';
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 const ADMIN_TOKEN_KEY = 'streetwearAdminToken';
 
 export function getAdminToken(): string | null {
@@ -18,9 +18,19 @@ export function clearAdminToken() {
 }
 
 export async function loginAdmin(email: string, password: string) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  };
+
+  // Add ngrok headers if using ngrok URL
+  if (BACKEND_URL.includes('ngrok')) {
+    headers['ngrok-skip-browser-warning'] = 'true';
+  }
+
   const response = await fetch(`${BACKEND_URL}/api/admin/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers,
     body: JSON.stringify({ email, password }),
   });
 
@@ -39,6 +49,11 @@ export async function adminFetch(path: string, options: RequestInit = {}) {
   headers.set('Accept', 'application/json');
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  // Add ngrok headers if using ngrok URL
+  if (BACKEND_URL.includes('ngrok')) {
+    headers.set('ngrok-skip-browser-warning', 'true');
   }
 
   return fetch(`${BACKEND_URL}${path}`, {

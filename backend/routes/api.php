@@ -19,6 +19,7 @@ Route::get('categories', [CategoryController::class, 'index']);
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{slug}', [ProductController::class, 'show']);
 Route::post('orders', [OrderController::class, 'store']);
+Route::get('images/serve', [ImageController::class, 'serve']);
 
 Route::middleware(['auth:api'])->prefix('admin')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index']);

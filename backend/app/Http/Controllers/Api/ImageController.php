@@ -59,4 +59,39 @@ class ImageController extends Controller
             ], 500);
         }
     }
+
+    public function serve(Request $request)
+    {
+        $path = $request->query('path');
+        
+        if (!$path) {
+            return response()->json(['error' => 'Path parameter required'], 400);
+        }
+
+        // Decode path if base64 encoded
+        $decodedPath = base64_decode($path, true);
+        if ($decodedPath !== false) {
+            $path = $decodedPath;
+        }
+
+        // Security: prevent directory traversal
+        if (strpos($path, '..') !== false || strpos($path, './') === 0) {
+            return response()->json(['error' => 'Invalid path'], 403);
+        }
+
+        if (!Storage::disk('public')->exists($path)) {
+            return response()->json(['error' => 'Image not found'], 404);
+        }
+
+        try {
+            $content = Storage::disk('public')->get($path);
+            $mimeType = Storage::disk('public')->mimeType($path);
+            
+            return response($content)
+                ->header('Content-Type', $mimeType)
+                ->header('Cache-Control', 'public, max-age=86400');
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to retrieve image'], 500);
+        }
+    }
 }

@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProductDetailTemu from '@/components/ProductDetailTemu';
 import { addCartItem, getCartCount, onCartUpdated } from '@/lib/cart';
+import { loadImageAsBlob } from '@/lib/imageLoader';
 
 type SizeOption = {
   label: string;
@@ -96,6 +97,7 @@ export default function ProductPage({ params }: any) {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageCache, setImageCache] = useState<Record<string, string>>({});
 
   const normalizeImageUrl = (path: string, base: string) => {
     if (!path) return null;
@@ -188,11 +190,17 @@ export default function ProductPage({ params }: any) {
     const backend = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BASE_URL || '';
     const url = `${backend.replace(/\/$/, '')}/api/products/${encodeURIComponent(slug)}`;
 
+    const headers: Record<string, string> = {};
+    // Add ngrok headers if using ngrok URL
+    if (backend.includes('ngrok')) {
+      headers['ngrok-skip-browser-warning'] = 'true';
+    }
+
     (async () => {
       try {
         if (!active) return;
         setLoading(true);
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await fetch(url, { signal: controller.signal, headers });
         if (!active) return;
 
         if (!res.ok) {
@@ -297,6 +305,38 @@ export default function ProductPage({ params }: any) {
     };
   }, [slug]);
 
+  // Load product images with proper headers for mobile/4G access
+  useEffect(() => {
+    if (!product) return;
+
+    const loadImages = async () => {
+      const cache: Record<string, string> = {};
+      const allImages = new Set<string>();
+
+      // Collect all image URLs from all variations
+      product.variations.forEach((variation) => {
+        variation.images.forEach((img) => {
+          if (img && !img.startsWith('data:')) {
+            allImages.add(img);
+          }
+        });
+      });
+
+      // Load each image
+      for (const imageUrl of allImages) {
+        try {
+          cache[imageUrl] = await loadImageAsBlob(imageUrl);
+        } catch (error) {
+          console.error(`Failed to load product image:`, error);
+        }
+      }
+
+      setImageCache(cache);
+    };
+
+    loadImages();
+  }, [product]);
+
   const handleAddToCart = (color: string, size: string, quantity: number) => {
     addToCart(color, size, quantity);
   };
@@ -331,7 +371,7 @@ export default function ProductPage({ params }: any) {
           </button>
         </div>
       </div>
-      <ProductDetailTemu product={product} onAddToCart={handleAddToCart} />
+      <ProductDetailTemu product={product} onAddToCart={handleAddToCart} imageCache={imageCache} />
     </>
   ) : (
     <main className="min-h-screen bg-slate-50 flex items-center justify-center">

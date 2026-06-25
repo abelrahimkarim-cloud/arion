@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { loadImageAsBlob } from '@/lib/imageLoader';
 
 export default function HomePage() {
   const [products, setProducts] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [imageCache, setImageCache] = useState<Record<string, string>>({});
 
   const defaultImage =
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23e5e7eb" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%239ca3af"%3EImage Not Found%3C/text%3E%3C/svg%3E';
@@ -15,10 +17,17 @@ export default function HomePage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/products');
+        const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+        const headers: Record<string, string> = {};
+
+        // Add ngrok headers if using ngrok URL
+        if (BACKEND_URL.includes('ngrok')) {
+          headers['ngrok-skip-browser-warning'] = 'true';
+        }
+
+        const response = await fetch(`${BACKEND_URL}/api/products`, { headers });
         const data = await response.json();
         const productsData = data.data || data;
-        const BACKEND_URL = 'http://127.0.0.1:8000';
 
         // Transform API response to match frontend expectations
         const transformedProducts = productsData.map((product: any) => {
@@ -46,6 +55,29 @@ export default function HomePage() {
 
     fetchProducts();
   }, []);
+
+  // Load images with proper headers for mobile/4G access
+  useEffect(() => {
+    if (products.length === 0) return;
+
+    const loadImages = async () => {
+      const cache: Record<string, string> = {};
+      for (const product of products) {
+        if (product.image && !product.image.startsWith('data:')) {
+          try {
+            cache[product.id] = await loadImageAsBlob(product.image);
+          } catch (error) {
+            console.error(`Failed to load image for product ${product.id}:`, error);
+          }
+        } else {
+          cache[product.id] = product.image;
+        }
+      }
+      setImageCache(cache);
+    };
+
+    loadImages();
+  }, [products]);
 
   const featured = products.filter((product: any) => product.show_on_homepage);
 
@@ -103,7 +135,11 @@ export default function HomePage() {
                       className="group block overflow-hidden rounded-3xl bg-slate-100 transition hover:-translate-y-1 hover:shadow-xl"
                     >
                       <img
-                        src={imageErrors[product.id] ? defaultImage : product.image}
+                        src={
+                          imageErrors[product.id]
+                            ? defaultImage
+                            : imageCache[product.id] || product.image
+                        }
                         alt={product.name}
                         onError={() => setImageErrors((prev) => ({ ...prev, [product.id]: true }))}
                         className="h-48 w-full object-cover"

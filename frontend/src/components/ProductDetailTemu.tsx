@@ -34,9 +34,14 @@ interface Product {
 interface ProductDetailTemuProps {
   product: Product;
   onAddToCart?: (color: string, size: string, quantity: number) => void;
+  imageCache?: Record<string, string>;
 }
 
-export default function ProductDetailTemu({ product, onAddToCart }: ProductDetailTemuProps) {
+export default function ProductDetailTemu({
+  product,
+  onAddToCart,
+  imageCache = {},
+}: ProductDetailTemuProps) {
   const [selectedColor, setSelectedColor] = useState<string>(product.variations[0]?.slug || '');
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -107,7 +112,7 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
               <div className="aspect-square w-full bg-slate-100">
                 {activeImage ? (
                   <img
-                    src={activeImage}
+                    src={imageCache[activeImage] || activeImage}
                     alt={`${product.name} - ${selectedVariation?.label}`}
                     className="h-full w-full object-cover"
                   />
@@ -135,7 +140,7 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
                     aria-label={`View image ${index + 1}`}
                   >
                     <img
-                      src={image}
+                      src={imageCache[image] || image}
                       alt={`Thumbnail ${index + 1}`}
                       className="h-full w-full object-cover"
                     />
@@ -336,7 +341,7 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
                         >
                           {mainImage ? (
                             <img
-                              src={mainImage}
+                              src={imageCache[mainImage] || mainImage}
                               alt={variation.label}
                               className="h-full w-full object-cover"
                             />
