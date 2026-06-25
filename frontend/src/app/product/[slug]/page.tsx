@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProductDetailTemu from '@/components/ProductDetailTemu';
+import { addCartItem, getCartCount, onCartUpdated } from '@/lib/cart';
 
 type SizeOption = {
   label: string;
@@ -30,15 +31,6 @@ type Product = {
   category: string;
   variations: ColorVariation[];
   related: { name: string; slug: string }[];
-};
-
-type OrderPayload = {
-  color: string;
-  size: string;
-  quantity: number;
-  variantId?: number | null;
-  imageUrl?: string | null;
-  price: number;
 };
 
 const sampleProduct: Product = {
@@ -152,24 +144,34 @@ export default function ProductPage({ params }: any) {
     return variation?.images?.[0] ?? null;
   };
 
-  const openOrder = (color: string, size: string, quantity: number) => {
+  const [cartCount, setCartCount] = useState(0);
+
+  const updateCartCount = () => {
+    setCartCount(getCartCount());
+  };
+
+  useEffect(() => {
+    updateCartCount();
+    return onCartUpdated(updateCartCount);
+  }, []);
+
+  const addToCart = (color: string, size: string, quantity: number) => {
     const variantId = getVariantId(color, size);
     const imageUrl = getImageForColor(color) || '';
-    if (!variantId) return;
+    if (!variantId || !product) return;
 
-    const params = new URLSearchParams({
-      product_name: product?.name || '',
-      variant_id: String(variantId),
+    addCartItem({
+      variantId,
+      productId: undefined,
+      productName: product.name,
       color,
       size,
-      quantity: String(quantity),
-      price: String(
-        product?.variations.find((v) => v.slug === color)?.price ?? product?.defaultPrice ?? 0
-      ),
-      image_url: imageUrl,
+      price: product.variations.find((v) => v.slug === color)?.price ?? product.defaultPrice ?? 0,
+      imageUrl,
+      quantity,
     });
 
-    router.push(`/checkout?${params.toString()}`);
+    router.push('/cart');
   };
 
   useEffect(() => {
@@ -181,18 +183,24 @@ export default function ProductPage({ params }: any) {
       return;
     }
 
-    const abort = new AbortController();
+    const controller = new AbortController();
+    let active = true;
     const backend = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BASE_URL || '';
     const url = `${backend.replace(/\/$/, '')}/api/products/${encodeURIComponent(slug)}`;
 
     (async () => {
       try {
+        if (!active) return;
         setLoading(true);
-        const res = await fetch(url, { signal: abort.signal });
+        const res = await fetch(url, { signal: controller.signal });
+        if (!active) return;
+
         if (!res.ok) {
           setProduct(sampleProduct);
         } else {
           const data = await res.json();
+          if (!active) return;
+
           const base = backend.replace(/\/$/, '');
           const imageUrls: string[] = Array.isArray(data.images)
             ? data.images
@@ -269,19 +277,28 @@ export default function ProductPage({ params }: any) {
 
           setProduct(mappedProduct);
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err?.name === 'AbortError') {
+          return;
+        }
         console.error('Product fetch error:', err);
-        setProduct(sampleProduct);
+        if (active) {
+          setProduct(sampleProduct);
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     })();
 
-    return () => abort.abort();
+    return () => {
+      active = false;
+    };
   }, [slug]);
 
   const handleAddToCart = (color: string, size: string, quantity: number) => {
-    openOrder(color, size, quantity);
+    addToCart(color, size, quantity);
   };
 
   if (loading) {
@@ -297,6 +314,23 @@ export default function ProductPage({ params }: any) {
 
   return product ? (
     <>
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-600">Cart</p>
+            <p className="text-xl font-bold text-slate-900">
+              {cartCount} item{cartCount === 1 ? '' : 's'} in cart
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/cart')}
+            className="inline-flex items-center justify-center rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-700"
+          >
+            View Cart
+          </button>
+        </div>
+      </div>
       <ProductDetailTemu product={product} onAddToCart={handleAddToCart} />
     </>
   ) : (

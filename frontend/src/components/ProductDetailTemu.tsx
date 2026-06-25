@@ -51,7 +51,8 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
 
   useEffect(() => {
     setActiveImageIndex(0);
-    setSelectedSize(null);
+    const firstAvailable = selectedVariation?.sizes.find((size) => size.available);
+    setSelectedSize(firstAvailable?.label ?? null);
   }, [selectedVariation]);
 
   const currentPrice =

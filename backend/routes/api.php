@@ -23,6 +23,7 @@ Route::post('orders', [OrderController::class, 'store']);
 Route::middleware(['auth:api'])->prefix('admin')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index']);
     Route::get('orders', [OrderController::class, 'adminIndex']);
+    Route::get('orders/{order}', [OrderController::class, 'show']);
     Route::patch('orders/{order}', [OrderController::class, 'updateStatus']);
     Route::get('products', [ProductController::class, 'adminIndex']);
     Route::get('products/{product}', [ProductController::class, 'adminShow']);
