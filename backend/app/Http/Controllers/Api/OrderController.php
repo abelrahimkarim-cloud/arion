@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -21,14 +22,29 @@ class OrderController extends Controller
             'phone' => 'required|string|max:50',
             'city' => 'required|string|max:255',
             'address' => 'required|string|max:500',
-            'variant_id' => 'required|exists:product_variants,id',
-            'quantity' => 'required|integer|min:1',
             'notes' => 'nullable|string|max:1000',
+            'items' => 'required|array|min:1',
+            'items.*.variant_id' => 'required|exists:product_variants,id',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $variant = ProductVariant::with('product')->findOrFail($data['variant_id']);
-        if ($variant->stock < $data['quantity']) {
-            return response()->json(['message' => 'Selected variant is out of stock'], 422);
+        $items = collect($data['items'])->map(function ($item) {
+            return [
+                'variant_id' => (int) $item['variant_id'],
+                'quantity' => (int) $item['quantity'],
+            ];
+        });
+
+        $variantIds = $items->pluck('variant_id')->unique()->all();
+        $variants = ProductVariant::with('product')->whereIn('id', $variantIds)->get()->keyBy('id');
+
+        $aggregatedQuantities = $items->groupBy('variant_id')->map(fn($group) => $group->sum('quantity'));
+
+        foreach ($aggregatedQuantities as $variantId => $quantity) {
+            $variant = $variants->get($variantId);
+            if (!$variant || $variant->stock < $quantity) {
+                return response()->json(['message' => 'One or more items are out of stock.'], 422);
+            }
         }
 
         $customer = Customer::firstOrCreate([
@@ -39,27 +55,44 @@ class OrderController extends Controller
             'address' => $data['address'],
         ]);
 
-        $order = Order::create([
-            'customer_id' => $customer->id,
-            'variant_id' => $variant->id,
-            'status' => 'New',
-            'quantity' => $data['quantity'],
-            'total_price' => $variant->price * $data['quantity'],
-            'notes' => $data['notes'] ?? null,
-            'city' => $data['city'],
-            'address' => $data['address'],
-            'whatsapp_sent' => false,
-        ]);
+        $order = DB::transaction(function () use ($data, $items, $variants, $customer, $aggregatedQuantities) {
+            $totalQuantity = $items->sum('quantity');
+            $totalPrice = $items->reduce(function ($sum, $item) use ($variants) {
+                $variant = $variants->get($item['variant_id']);
+                return $sum + ($variant->price * $item['quantity']);
+            }, 0);
 
-        OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $variant->product_id,
-            'variant_id' => $variant->id,
-            'quantity' => $data['quantity'],
-            'price' => $variant->price,
-        ]);
+            $firstVariantId = $items->first()['variant_id'];
 
-        $variant->decrement('stock', $data['quantity']);
+            $order = Order::create([
+                'customer_id' => $customer->id,
+                'variant_id' => $firstVariantId,
+                'status' => 'New',
+                'quantity' => $totalQuantity,
+                'total_price' => $totalPrice,
+                'notes' => $data['notes'] ?? null,
+                'city' => $data['city'],
+                'address' => $data['address'],
+                'whatsapp_sent' => false,
+            ]);
+
+            foreach ($items as $item) {
+                $variant = $variants->get($item['variant_id']);
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $variant->product_id,
+                    'variant_id' => $variant->id,
+                    'quantity' => $item['quantity'],
+                    'price' => $variant->price,
+                ]);
+            }
+
+            foreach ($aggregatedQuantities as $variantId => $quantity) {
+                ProductVariant::where('id', $variantId)->decrement('stock', $quantity);
+            }
+
+            return $order;
+        });
 
         $setting = Setting::first();
         if ($setting && $setting->whatsapp_number) {
@@ -70,7 +103,9 @@ class OrderController extends Controller
         if (config('mail.mailers.smtp.host')) {
             try {
                 Mail::raw("New COD order received (#{$order->id}) from {$customer->name}.", function ($message) use ($setting) {
-                    $message->to($setting->whatsapp_number . '@example.com');
+                    if ($setting && $setting->whatsapp_number) {
+                        $message->to($setting->whatsapp_number . '@example.com');
+                    }
                     $message->subject('New Order Received');
                 });
             } catch (\Throwable $exception) {
@@ -99,6 +134,13 @@ class OrderController extends Controller
         return response()->json($query->paginate(20)->withQueryString());
     }
 
+    public function show(Order $order)
+    {
+        $order->load(['customer', 'items.variant.product']);
+
+        return response()->json($order);
+    }
+
     public function updateStatus(Request $request, Order $order)
     {
         $data = $request->validate([
@@ -111,7 +153,11 @@ class OrderController extends Controller
 
     private function sendWhatsappNotification(string $phone, Order $order)
     {
-        $message = urlencode("New order #{$order->id}: {$order->quantity} x {$order->variant->product->name} ({$order->variant->size}/{$order->variant->color}) for {$order->customer->name}. Deliver to {$order->address}, {$order->city}.");
+        $items = $order->items->map(function ($item) {
+            return "{$item->quantity}x {$item->variant->product->name} ({$item->variant->color}/{$item->variant->size})";
+        })->join(', ');
+
+        $message = urlencode("New order #{$order->id}: {$items} for {$order->customer->name}. Deliver to {$order->address}, {$order->city}.");
         $url = env('WHATSAPP_API_URL');
 
         if ($url) {
