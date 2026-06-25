@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import ProductHeroImage from './product/ProductHeroImage';
+import ProductImageCard from './product/ProductImageCard';
 
 interface SizeOption {
   label: string;
@@ -84,13 +86,22 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
 
   const activeImage = galleryImages[activeImageIndex] || '';
 
+  const combinedImages = useMemo(() => {
+    const variationImages = product.variations.flatMap((v) => v.images ?? []);
+    // top-level product images may exist on the product object
+    // include them first then append variation images and dedupe
+    // @ts-ignore
+    const productImages = Array.isArray((product as any).images) ? (product as any).images : [];
+    return Array.from(new Set([...productImages, ...variationImages].filter(Boolean)));
+  }, [product]);
+
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Main product section */}
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
           {/* Left: Image gallery */}
-          <div className="space-y-4 order-2 lg:order-1">
+          <div className="space-y-4 order-2 lg:order-1 lg:max-h-screen lg:overflow-y-auto lg:pr-4">
             {/* Main image */}
             <div className="relative overflow-hidden rounded-2xl bg-white shadow-sm">
               <div className="aspect-square w-full bg-slate-100">
@@ -211,10 +222,29 @@ export default function ProductDetailTemu({ product, onAddToCart }: ProductDetai
                 </div>
               </div>
             </div>
+
+            {/* All product images (after reviews) - blue box */}
+            {combinedImages.length > 0 && (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-900">All images</h3>
+                </div>
+
+                <div className="space-y-6">
+                  {combinedImages.map((img, idx) => (
+                    <ProductHeroImage
+                      key={`${img}-${idx}`}
+                      src={img}
+                      alt={`${product.name} ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right: Order panel */}
-          <div className="order-1 lg:order-2 space-y-6">
+          <div className="order-1 lg:order-2 space-y-6 lg:sticky lg:top-24 lg:self-start">
             {/* Product header */}
             <div className="rounded-2xl bg-white p-6 shadow-sm space-y-4">
               {/* Category & SKU */}
